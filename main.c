@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define OBSTACLE_RADIUS 30
+// #define OBSTACLE_RADIUS 30
 
 typedef struct Bullet
 {
@@ -44,15 +44,15 @@ int main(void)
     int score = 0;
     char scoreBuf[32];
 
-    float speed = 100.0f;
+    float speed = 240.0f;
     float dt = 1;
     float bulletSpeed = 30.0f;
     Bullet bullet = {0};
 
     char xBuffer[32];
     char yBuffer[32];
-    const int screenW = 1000;
-    const int screenH = 1000;
+    const int screenW = 1500;
+    const int screenH = 1500;
 
     float player_radius = 50;
 
@@ -100,24 +100,23 @@ int main(void)
                 bullet.active = false;
 
             // draw a bullet as a 20x20 square
-            DrawRectangle(bullet.position.x - 10, bullet.position.y - 10, 20,
-                          20, MAGENTA);
+            DrawRectangle(bullet.position.x - 15, bullet.position.y - 15, 30,
+                          30, RED);
         }
 
         // draw enemy as 40x40 square
-        DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, BLACK);
+        DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, RAYWHITE);
 
-        ClearBackground(GREEN);
+        ClearBackground(BLACK);
         // floatPosToString(ballPosition.x, 'x', xBuffer, sizeof(xBuffer));
         // floatPosToString(ballPosition.y, 'y', yBuffer, sizeof(yBuffer));
 
         scoreToString(score, scoreBuf, 32);
-        DrawText(scoreBuf, 10, 10, 40, BLACK);
-        // DrawText(xBuffer, 10, 60, 40, BLACK);
-        // DrawText(yBuffer, 210, 60, 40, BLACK);
+        DrawText(scoreBuf, 10, 10, 40, RAYWHITE);
+        // DrawText(xBuffer, 10, 60, 40, RAYWHITE);
+        // DrawText(yBuffer, 210, 60, 40, RAYWHITE);
 
-        DrawCircleV(ballPosition, player_radius, BLUE);
-        DrawCircleV(ballPosition, 1, RED);
+        DrawCircleV(ballPosition, player_radius, GREEN);
 
         if (enemyActive && CheckCollisionRecs((Rectangle){enemyPosition.x, enemyPosition.y, 40, 40 }, (Rectangle){bullet.position.x, bullet.position.y, 20, 20 }))
         {
