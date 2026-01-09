@@ -121,6 +121,7 @@ int main(void)
 
         if (enemyActive && CheckCollisionRecs((Rectangle){enemyPosition.x, enemyPosition.y, 40, 40 }, (Rectangle){bullet.position.x, bullet.position.y, 20, 20 }))
         {
+            bullet.active = false;
             enemyActive = false;
             score++; 
             enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
