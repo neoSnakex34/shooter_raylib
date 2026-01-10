@@ -10,11 +10,11 @@
 #define UP -1
 #define DOWN 1
 
-typedef struct Bullet
+typedef struct Entity
 {
     Vector2 position;
     bool active;
-} Bullet;
+} Entity;
 
 void floatPosToString(float pos, char posSym, char *buf, size_t bufSize)
 {
@@ -67,15 +67,30 @@ int main(void)
     float speed = 240.0f;
     float dt = 1;
     float bulletSpeed = 30.0f;
-    Bullet bullet = {0};
+    Entity bullet = {0};
+
     // WARNING this is kinda risky memorywise
     float *positionDirectionToModifyAsPointer = NULL;
     int direction = UP; // fallback to up
+
 
     // char xBuffer[32];
     // char yBuffer[32];
     const int screenW = 1500;
     const int screenH = 1500;
+
+    // FIXME rename it to player
+    Vector2 playerPosition = {(float)screenW / 2, (float)screenH / 2};
+    bool playerActive = true;
+
+        
+    Vector2 enemyPosition =
+        getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
+    bool enemyActive = true;
+    bool gameOver = false;
+
+    // debug purposes
+    int c = 0;
 
     InitAudioDevice();
     Sound shootFx = LoadSound("assets/fx/shoot.ogg");
@@ -84,18 +99,6 @@ int main(void)
     SetMusicVolume(theme, 0.4);
     PlayMusicStream(theme);
     InitWindow(screenW, screenH, "Shoot!");
-
-    // FIXME rename it to player
-    Vector2 ballPosition = {(float)screenW / 2, (float)screenH / 2};
-    bool playerActive = true;
-    
-    Vector2 enemyPosition =
-        getRandomPositionWithNoCollision(screenW, screenH, ballPosition);
-    bool enemyActive = true;
-    bool gameOver = false;
-
-    // debug purposes
-    int c = 0;
 
     SetTargetFPS(60);
 
@@ -112,20 +115,20 @@ int main(void)
         }
 
         if (IsKeyDown(KEY_D))
-            positionStepAndNormalize(1, stepFactor, &ballPosition.x, screenW);
+            positionStepAndNormalize(1, stepFactor, &playerPosition.x, screenW);
         if (IsKeyDown(KEY_A))
-            positionStepAndNormalize(-1, stepFactor, &ballPosition.x, screenW);
+            positionStepAndNormalize(-1, stepFactor, &playerPosition.x, screenW);
         if (IsKeyDown(KEY_W))
-            positionStepAndNormalize(-1, stepFactor, &ballPosition.y, screenH);
+            positionStepAndNormalize(-1, stepFactor, &playerPosition.y, screenH);
         if (IsKeyDown(KEY_S))
-            positionStepAndNormalize(1, stepFactor, &ballPosition.y, screenH);
+            positionStepAndNormalize(1, stepFactor, &playerPosition.y, screenH);
 
         if (!bullet.active && !gameOver)
         {
             if (IsKeyPressed(KEY_UP))
             {
-                bullet.position.x = ballPosition.x;
-                bullet.position.y = ballPosition.y - (PLAYER_RADIUS + 10);
+                bullet.position.x = playerPosition.x;
+                bullet.position.y = playerPosition.y - (PLAYER_RADIUS + 10);
                 positionDirectionToModifyAsPointer = &bullet.position.y;
                 direction = UP;
                 bullet.active = true;
@@ -133,8 +136,8 @@ int main(void)
 
             if (IsKeyPressed(KEY_RIGHT))
             {
-                bullet.position.x = ballPosition.x + (PLAYER_RADIUS + 10);
-                bullet.position.y = ballPosition.y;
+                bullet.position.x = playerPosition.x + (PLAYER_RADIUS + 10);
+                bullet.position.y = playerPosition.y;
                 positionDirectionToModifyAsPointer = &bullet.position.x;
                 direction = RIGHT;
                 bullet.active = true;
@@ -142,8 +145,8 @@ int main(void)
 
             if (IsKeyPressed(KEY_LEFT))
             {
-                bullet.position.x = ballPosition.x - (PLAYER_RADIUS + 10);
-                bullet.position.y = ballPosition.y;
+                bullet.position.x = playerPosition.x - (PLAYER_RADIUS + 10);
+                bullet.position.y = playerPosition.y;
                 positionDirectionToModifyAsPointer = &bullet.position.x;
                 direction = LEFT;
                 bullet.active = true;
@@ -151,8 +154,8 @@ int main(void)
             if (IsKeyPressed(KEY_DOWN))
             {
 
-                bullet.position.x = ballPosition.x;
-                bullet.position.y = ballPosition.y + (PLAYER_RADIUS + 10);
+                bullet.position.x = playerPosition.x;
+                bullet.position.y = playerPosition.y + (PLAYER_RADIUS + 10);
                 positionDirectionToModifyAsPointer = &bullet.position.y;
                 direction = DOWN;
                 bullet.active = true;
@@ -181,8 +184,8 @@ int main(void)
         DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, RAYWHITE);
 
         ClearBackground(BLACK);
-        // floatPosToString(ballPosition.x, 'x', xBuffer, sizeof(xBuffer));
-        // floatPosToString(ballPosition.y, 'y', yBuffer, sizeof(yBuffer));
+        // floatPosToString(playerPosition.x, 'x', xBuffer, sizeof(xBuffer));
+        // floatPosToString(playerPosition.y, 'y', yBuffer, sizeof(yBuffer));
 
         scoreToString(score, scoreBuf, 32);
         DrawText(scoreBuf, 10, 10, 40, RAYWHITE);
@@ -190,15 +193,15 @@ int main(void)
         // DrawText(yBuffer, 210, 60, 40, RAYWHITE);
 
         // draw main player
-        if (playerActive) DrawCircleV(ballPosition, PLAYER_RADIUS, GREEN);
+        if (playerActive) DrawCircleV(playerPosition, PLAYER_RADIUS, GREEN);
 
-        // DrawRectangle(ballPosition.x-((PLAYER_RADIUS*sqrt(2))/2),
-        // ballPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
+        // DrawRectangle(playerPosition.x-((PLAYER_RADIUS*sqrt(2))/2),
+        // playerPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
         // PLAYER_RADIUS*sqrt(2), YELLOW);
 
         if (enemyActive &&
             CheckCollisionCircleRec(
-                ballPosition, PLAYER_RADIUS,
+                playerPosition, PLAYER_RADIUS,
                 (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40}))
         {
             gameOver = true;
@@ -223,7 +226,7 @@ int main(void)
             PlaySound(enemyDeadFx);
             score++;
             enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
-                                                             ballPosition);
+                                                             playerPosition);
             enemyActive = true;
         }
         EndDrawing();
