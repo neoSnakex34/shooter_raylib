@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+
+#define ENEMY_TOTAL 10
 #define PLAYER_RADIUS 50
 #define RIGHT 1
 #define LEFT -1
@@ -15,6 +17,19 @@ typedef struct Entity
     Vector2 position;
     bool active;
 } Entity;
+
+bool atLeastOneEntityIsActive(Entity* e, size_t count) {
+
+    bool check = false;
+    for (size_t i = 0; i < count; ++i) {
+        if (e[i].active == true) {
+            check = true; 
+        }
+    }
+
+    return check;
+
+}
 
 void floatPosToString(float pos, char posSym, char *buf, size_t bufSize)
 {
@@ -60,6 +75,11 @@ Vector2 getRandomPositionWithNoCollision(int maxW, int maxH,
 
 int main(void)
 {
+
+    /*
+        game configuration
+
+    */
     srand(time(NULL));
     int score = 0;
     char scoreBuf[32];
@@ -67,26 +87,34 @@ int main(void)
     float speed = 240.0f;
     float dt = 1;
     float bulletSpeed = 30.0f;
+
+    Entity enemies[ENEMY_TOTAL] = {0};
     Entity bullet = {0};
 
     // WARNING this is kinda risky memorywise
     float *positionDirectionToModifyAsPointer = NULL;
     int direction = UP; // fallback to up
 
-
     // char xBuffer[32];
     // char yBuffer[32];
     const int screenW = 1500;
     const int screenH = 1500;
 
-    // FIXME rename it to player
     Vector2 playerPosition = {(float)screenW / 2, (float)screenH / 2};
     bool playerActive = true;
 
-        
-    Vector2 enemyPosition =
-        getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
-    bool enemyActive = true;
+    /* initialize the enemies */
+    for (size_t i = 0; i < ENEMY_TOTAL; ++i)
+    {
+        enemies[i].active = true;
+        // TODO make them avoid eachother with a pointer to the vector
+        enemies[i].position =
+            getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
+    }
+
+    //   Vector2 enemyPosition =
+    //       getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
+    //   bool enemyActive = true;
     bool gameOver = false;
 
     // debug purposes
@@ -117,9 +145,11 @@ int main(void)
         if (IsKeyDown(KEY_D))
             positionStepAndNormalize(1, stepFactor, &playerPosition.x, screenW);
         if (IsKeyDown(KEY_A))
-            positionStepAndNormalize(-1, stepFactor, &playerPosition.x, screenW);
+            positionStepAndNormalize(-1, stepFactor, &playerPosition.x,
+                                     screenW);
         if (IsKeyDown(KEY_W))
-            positionStepAndNormalize(-1, stepFactor, &playerPosition.y, screenH);
+            positionStepAndNormalize(-1, stepFactor, &playerPosition.y,
+                                     screenH);
         if (IsKeyDown(KEY_S))
             positionStepAndNormalize(1, stepFactor, &playerPosition.y, screenH);
 
@@ -180,8 +210,15 @@ int main(void)
                           30, RED);
         }
 
-        // draw enemy as 40x40 square
-        DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, RAYWHITE);
+        /* for each enemy
+            draw it as a 40x40 square into his position 
+        */
+        for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
+            if (enemies[i].active)
+                DrawRectangle(enemies[i].position.x, enemies[i].position.y, 40, 40, RAYWHITE);
+        }
+        
+        // DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, RAYWHITE);
 
         ClearBackground(BLACK);
         // floatPosToString(playerPosition.x, 'x', xBuffer, sizeof(xBuffer));
@@ -193,43 +230,74 @@ int main(void)
         // DrawText(yBuffer, 210, 60, 40, RAYWHITE);
 
         // draw main player
-        if (playerActive) DrawCircleV(playerPosition, PLAYER_RADIUS, GREEN);
+        if (playerActive)
+            DrawCircleV(playerPosition, PLAYER_RADIUS, GREEN);
 
         // DrawRectangle(playerPosition.x-((PLAYER_RADIUS*sqrt(2))/2),
         // playerPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
         // PLAYER_RADIUS*sqrt(2), YELLOW);
 
-        if (enemyActive &&
-            CheckCollisionCircleRec(
-                playerPosition, PLAYER_RADIUS,
-                (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40}))
-        {
-            gameOver = true;
+        if (atLeastOneEntityIsActive(enemies, ENEMY_TOTAL)) {
+
+            for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
+                if (enemies[i].active && CheckCollisionCircleRec(playerPosition, PLAYER_RADIUS, (Rectangle){enemies[i].position.x, enemies[i].position.y, 40, 40}))
+                    gameOver = true; 
+            }
         }
+        
+        // if (enemyActive &&
+        //     CheckCollisionCircleRec(
+        //         playerPosition, PLAYER_RADIUS,
+        //         (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40}))
+        // {
+        //     gameOver = true;
+        // }
+
+        if (atLeastOneEntityIsActive(enemies, ENEMY_TOTAL)) {
+
+            for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
+                if (  CheckCollisionRecs(
+                (Rectangle){enemies[i].position.x, enemies[i].position.y, 40, 40},
+                (Rectangle){bullet.position.x, bullet.position.y, 20, 20})) {
+                    PlaySound(enemyDeadFx);
+                    enemies[i].active = false;
+                    bullet.active = false;
+                    score++;
+                    enemies[i].position = getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
+                    enemies[i].active = true; 
+                    // update enemies ? 
+                }
+            }
+        }
+        // if (enemyActive &&
+        //     CheckCollisionRecs(
+        //         (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40},
+        //         (Rectangle){bullet.position.x, bullet.position.y, 20, 20}))
+        // {
+        //     bullet.active = false;
+        //     enemyActive = false;
+        //     PlaySound(enemyDeadFx);
+        //     score++;
+        //     enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
+        //                                                      playerPosition);
+        //     enemyActive = true;
+        // }
 
         if (gameOver)
         {
             ClearBackground(RAYWHITE);
             StopMusicStream(theme);
             playerActive = false;
-            enemyActive = false;
-            bullet.active = false; 
-            DrawText("Game Over, press q to quit", screenW/2, screenH/2, 50, BLACK);
-        }
-        if (enemyActive &&
-            CheckCollisionRecs(
-                (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40},
-                (Rectangle){bullet.position.x, bullet.position.y, 20, 20}))
-        {
+            for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
+                enemies[i].active = false; 
+            }
+            // enemyActive = false;
             bullet.active = false;
-            enemyActive = false;
-            PlaySound(enemyDeadFx);
-            score++;
-            enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
-                                                             playerPosition);
-            enemyActive = true;
+            DrawText("Game Over, press q to quit", screenW / 2, screenH / 2, 50,
+                     BLACK);
         }
-        EndDrawing();
+
+              EndDrawing();
     }
 
     UnloadMusicStream(theme);
