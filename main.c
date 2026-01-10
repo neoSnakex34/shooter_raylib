@@ -196,8 +196,6 @@ int main(void)
         // ballPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
         // PLAYER_RADIUS*sqrt(2), YELLOW);
 
-        // there will be a little bit of a threshold for the player hitbox, for
-        // now
         if (enemyActive &&
             CheckCollisionCircleRec(
                 ballPosition, PLAYER_RADIUS,
