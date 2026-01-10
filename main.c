@@ -4,6 +4,10 @@
 #include <time.h>
 
 // #define OBSTACLE_RADIUS 30
+#define RIGHT 1
+#define LEFT -1
+#define UP -1
+#define DOWN 1
 
 typedef struct Bullet
 {
@@ -21,6 +25,23 @@ void scoreToString(int score, char *buf, size_t bufSize)
     snprintf(buf, bufSize, "score: %d", score);
 }
 
+// x  | width
+// y  | height
+// 1  | right
+// -1 | left
+void positionStepAndNormalize(int direction, float stepFactor, float *pos,
+                              const int screenDim)
+{
+    if ((direction != -1) && (direction != 1))
+    {
+        printf("POSITION MUST EITHER BE 1 OR -1");
+        return;
+    }
+    // stepfactor will usually be speed*dt
+    *pos += direction * stepFactor;
+    *pos = (float)((int)(*pos + screenDim) % screenDim);
+}
+
 Vector2 getRandomPositionWithNoCollision(int maxW, int maxH,
                                          Vector2 avoidTarget)
 // TODO implement right checks for positioning
@@ -34,7 +55,6 @@ Vector2 getRandomPositionWithNoCollision(int maxW, int maxH,
     p.y = y;
 
     // check isValid
-
     return p;
 }
 
@@ -48,6 +68,9 @@ int main(void)
     float dt = 1;
     float bulletSpeed = 30.0f;
     Bullet bullet = {0};
+    // WARNING this is kinda risky memorywise
+    float *directionPointer = NULL;
+    int direction = UP; // fallback to up
 
     char xBuffer[32];
     char yBuffer[32];
@@ -70,33 +93,73 @@ int main(void)
     while (!WindowShouldClose())
     {
         dt = GetFrameTime();
+        float stepFactor = speed * dt;
         BeginDrawing();
 
-        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
-            ballPosition.x += (speed * dt);
-        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
-            ballPosition.x -= (speed * dt);
-        if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W))
-            ballPosition.y -= (speed * dt);
-        if (IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S))
-            ballPosition.y += (speed * dt);
-
-        if (IsKeyPressed(KEY_SPACE) && !bullet.active)
-        {
-            bullet.position.x = ballPosition.x;
-            bullet.position.y = ballPosition.y - (player_radius + 10);
-            bullet.active = true;
-        }
         if (IsKeyPressed(KEY_Q))
         {
             break;
         }
 
-        if (bullet.active)
-        {
-            bullet.position.y -= bulletSpeed;
+        if (IsKeyDown(KEY_D))
+            positionStepAndNormalize(1, stepFactor, &ballPosition.x, screenW);
+        if (IsKeyDown(KEY_A))
+            positionStepAndNormalize(-1, stepFactor, &ballPosition.x, screenW);
+        if (IsKeyDown(KEY_W))
+            positionStepAndNormalize(-1, stepFactor, &ballPosition.y, screenH);
+        if (IsKeyDown(KEY_S))
+            positionStepAndNormalize(1, stepFactor, &ballPosition.y, screenH);
 
-            if (bullet.position.y < 0)
+        if (!bullet.active)
+        {
+            if (IsKeyPressed(KEY_UP))
+            {
+                bullet.position.x = ballPosition.x;
+                bullet.position.y = ballPosition.y - (player_radius + 10);
+                directionPointer = &bullet.position.y;
+                direction = UP;
+                bullet.active = true;
+            }
+
+            if (IsKeyPressed(KEY_RIGHT))
+            {
+                bullet.position.x = ballPosition.x + (player_radius + 10);
+                bullet.position.y = ballPosition.y;
+                directionPointer = &bullet.position.x;
+                direction = RIGHT;
+                bullet.active = true;
+            }
+
+            if (IsKeyPressed(KEY_LEFT))
+            {
+                bullet.position.x = ballPosition.x - (player_radius + 10);
+                bullet.position.y = ballPosition.y;
+                directionPointer = &bullet.position.x;
+                direction = LEFT;
+                bullet.active = true;
+            }
+            if (IsKeyPressed(KEY_DOWN))
+            {
+                bullet.position.x = ballPosition.x;
+                bullet.position.y = ballPosition.y + (player_radius + 10);
+                directionPointer = &bullet.position.y;
+                direction = DOWN;
+                bullet.active = true;
+            }
+        }
+        // if (IsKeyPressed(KEY_SPACE) && !bullet.active)
+        // {
+        //     bullet.position.x = ballPosition.x;
+        //     bullet.position.y = ballPosition.y - (player_radius + 10);
+        //     bullet.active = true;
+        // }
+
+        if (bullet.active && directionPointer)
+        {
+            *directionPointer += bulletSpeed * direction;
+
+            if ((bullet.position.y < 0) || (bullet.position.y > screenH) ||
+                (bullet.position.x < 0) || (bullet.position.x > screenW))
                 bullet.active = false;
 
             // draw a bullet as a 20x20 square
@@ -118,11 +181,14 @@ int main(void)
 
         DrawCircleV(ballPosition, player_radius, GREEN);
 
-        if (enemyActive && CheckCollisionRecs((Rectangle){enemyPosition.x, enemyPosition.y, 40, 40 }, (Rectangle){bullet.position.x, bullet.position.y, 20, 20 }))
+        if (enemyActive &&
+            CheckCollisionRecs(
+                (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40},
+                (Rectangle){bullet.position.x, bullet.position.y, 20, 20}))
         {
             bullet.active = false;
             enemyActive = false;
-            score++; 
+            score++;
             enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
                                                              ballPosition);
             enemyActive = true;
