@@ -128,8 +128,12 @@ int main(void)
     SetMusicVolume(theme, 0.4);
     PlayMusicStream(theme);
     InitWindow(screenW, screenH, "Shoot!");
+    Texture2D playerTexture = LoadTexture("assets/sprites/player.png");
+    Texture2D bulletTexture = LoadTexture("assets/sprites/bullet.png");
+    Texture2D enemyTexture = LoadTexture("assets/sprites/enemy.png");
 
-    SetTargetFPS(120);
+    SetTargetFPS(60);
+
 
     while (!WindowShouldClose())
     {
@@ -206,9 +210,8 @@ int main(void)
                 (bullet.position.x < 0) || (bullet.position.x > screenW))
                 bullet.active = false;
 
-            // draw a bullet as a 20x20 square
-            DrawRectangle(bullet.position.x - 15, bullet.position.y - 15, 30,
-                          30, RED);
+            // draw the bullet 
+            DrawTexture(bulletTexture, bullet.position.x -15, bullet.position.y -15, WHITE);
         }
 
         /* for each enemy
@@ -216,9 +219,9 @@ int main(void)
         */
         for (size_t i = 0; i < ENEMY_TOTAL; ++i)
         {
-            if (enemies[i].active)
-                DrawRectangle(enemies[i].position.x, enemies[i].position.y, 40,
-                              40, RAYWHITE);
+            if (enemies[i].active) 
+                DrawTexture(enemyTexture, enemies[i].position.x, enemies[i].position.y, WHITE);
+                
         }
 
         // DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, RAYWHITE);
@@ -234,7 +237,8 @@ int main(void)
 
         // draw main player
         if (playerActive)
-            DrawCircleV(playerPosition, PLAYER_RADIUS, GREEN);
+            // DrawCircleV(playerPosition, PLAYER_RADIUS, GREEN);
+            DrawTexture(playerTexture, playerPosition.x-(playerTexture.width/2.0), playerPosition.y-(playerTexture.height/2.0), WHITE);
 
         // DrawRectangle(playerPosition.x-((PLAYER_RADIUS*sqrt(2))/2),
         // playerPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
@@ -317,6 +321,7 @@ int main(void)
         EndDrawing();
     }
 
+    UnloadTexture(playerTexture);
     UnloadMusicStream(theme);
     UnloadSound(shootFx);
     UnloadSound(enemyDeadFx);
