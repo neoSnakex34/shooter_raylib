@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-
 #define ENEMY_TOTAL 10
 #define PLAYER_RADIUS 50
 #define RIGHT 1
@@ -18,17 +17,19 @@ typedef struct Entity
     bool active;
 } Entity;
 
-bool atLeastOneEntityIsActive(Entity* e, size_t count) {
+bool atLeastOneEntityIsActive(Entity *e, size_t count)
+{
 
     bool check = false;
-    for (size_t i = 0; i < count; ++i) {
-        if (e[i].active == true) {
-            check = true; 
+    for (size_t i = 0; i < count; ++i)
+    {
+        if (e[i].active == true)
+        {
+            check = true;
         }
     }
 
     return check;
-
 }
 
 void floatPosToString(float pos, char posSym, char *buf, size_t bufSize)
@@ -128,7 +129,7 @@ int main(void)
     PlayMusicStream(theme);
     InitWindow(screenW, screenH, "Shoot!");
 
-    SetTargetFPS(60);
+    SetTargetFPS(120);
 
     while (!WindowShouldClose())
     {
@@ -211,13 +212,15 @@ int main(void)
         }
 
         /* for each enemy
-            draw it as a 40x40 square into his position 
+            draw it as a 40x40 square into his position
         */
-        for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
+        for (size_t i = 0; i < ENEMY_TOTAL; ++i)
+        {
             if (enemies[i].active)
-                DrawRectangle(enemies[i].position.x, enemies[i].position.y, 40, 40, RAYWHITE);
+                DrawRectangle(enemies[i].position.x, enemies[i].position.y, 40,
+                              40, RAYWHITE);
         }
-        
+
         // DrawRectangle(enemyPosition.x, enemyPosition.y, 40, 40, RAYWHITE);
 
         ClearBackground(BLACK);
@@ -237,14 +240,20 @@ int main(void)
         // playerPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
         // PLAYER_RADIUS*sqrt(2), YELLOW);
 
-        if (atLeastOneEntityIsActive(enemies, ENEMY_TOTAL)) {
+        if (atLeastOneEntityIsActive(enemies, ENEMY_TOTAL))
+        {
 
-            for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
-                if (enemies[i].active && CheckCollisionCircleRec(playerPosition, PLAYER_RADIUS, (Rectangle){enemies[i].position.x, enemies[i].position.y, 40, 40}))
-                    gameOver = true; 
+            for (size_t i = 0; i < ENEMY_TOTAL; ++i)
+            {
+                if (enemies[i].active &&
+                    CheckCollisionCircleRec(playerPosition, PLAYER_RADIUS,
+                                            (Rectangle){enemies[i].position.x,
+                                                        enemies[i].position.y,
+                                                        40, 40}))
+                    gameOver = true;
             }
         }
-        
+
         // if (enemyActive &&
         //     CheckCollisionCircleRec(
         //         playerPosition, PLAYER_RADIUS,
@@ -253,19 +262,25 @@ int main(void)
         //     gameOver = true;
         // }
 
-        if (atLeastOneEntityIsActive(enemies, ENEMY_TOTAL)) {
+        if (atLeastOneEntityIsActive(enemies, ENEMY_TOTAL))
+        {
 
-            for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
-                if (  CheckCollisionRecs(
-                (Rectangle){enemies[i].position.x, enemies[i].position.y, 40, 40},
-                (Rectangle){bullet.position.x, bullet.position.y, 20, 20})) {
+            for (size_t i = 0; i < ENEMY_TOTAL; ++i)
+            {
+                if (CheckCollisionRecs((Rectangle){enemies[i].position.x,
+                                                   enemies[i].position.y, 40,
+                                                   40},
+                                       (Rectangle){bullet.position.x,
+                                                   bullet.position.y, 20, 20}))
+                {
                     PlaySound(enemyDeadFx);
                     enemies[i].active = false;
                     bullet.active = false;
                     score++;
-                    enemies[i].position = getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
-                    enemies[i].active = true; 
-                    // update enemies ? 
+                    enemies[i].position = getRandomPositionWithNoCollision(
+                        screenW, screenH, playerPosition);
+                    enemies[i].active = true;
+                    // update enemies ?
                 }
             }
         }
@@ -278,7 +293,8 @@ int main(void)
         //     enemyActive = false;
         //     PlaySound(enemyDeadFx);
         //     score++;
-        //     enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
+        //     enemyPosition = getRandomPositionWithNoCollision(screenW,
+        //     screenH,
         //                                                      playerPosition);
         //     enemyActive = true;
         // }
@@ -288,8 +304,9 @@ int main(void)
             ClearBackground(RAYWHITE);
             StopMusicStream(theme);
             playerActive = false;
-            for (size_t i = 0; i < ENEMY_TOTAL; ++i) {
-                enemies[i].active = false; 
+            for (size_t i = 0; i < ENEMY_TOTAL; ++i)
+            {
+                enemies[i].active = false;
             }
             // enemyActive = false;
             bullet.active = false;
@@ -297,7 +314,7 @@ int main(void)
                      BLACK);
         }
 
-              EndDrawing();
+        EndDrawing();
     }
 
     UnloadMusicStream(theme);
