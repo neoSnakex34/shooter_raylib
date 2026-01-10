@@ -77,10 +77,12 @@ int main(void)
     const int screenW = 1500;
     const int screenH = 1500;
 
-    InitWindow(screenW, screenH, "hello diego");
     InitAudioDevice();
-    Sound shootFx = LoadSound("assets/audio/shoot.ogg");
-    Sound enemyDeadFx = LoadSound("assets/audio/enemy_dead.ogg");
+    Sound shootFx = LoadSound("assets/fx/shoot.ogg");
+    Sound enemyDeadFx = LoadSound("assets/fx/enemy_dead.ogg");
+
+
+    InitWindow(screenW, screenH, "Shoot!");
 
     // FIXME rename it to player
     Vector2 ballPosition = {(float)screenW / 2, (float)screenH / 2};
