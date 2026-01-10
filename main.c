@@ -1,9 +1,10 @@
 #include "raylib-5.5_linux_amd64/include/raylib.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-// #define OBSTACLE_RADIUS 30
+#define PLAYER_RADIUS 50
 #define RIGHT 1
 #define LEFT -1
 #define UP -1
@@ -48,7 +49,6 @@ Vector2 getRandomPositionWithNoCollision(int maxW, int maxH,
 {
     int x = rand() % maxW + 1;
     int y = rand() % maxH + 1;
-    float player_radius = 50;
 
     Vector2 p;
     p.x = x;
@@ -69,24 +69,30 @@ int main(void)
     float bulletSpeed = 30.0f;
     Bullet bullet = {0};
     // WARNING this is kinda risky memorywise
-    float *directionPointer = NULL;
+    float *positionDirectionToModifyAsPointer = NULL;
     int direction = UP; // fallback to up
 
-    char xBuffer[32];
-    char yBuffer[32];
+    // char xBuffer[32];
+    // char yBuffer[32];
     const int screenW = 1500;
     const int screenH = 1500;
 
-    float player_radius = 50;
-
     InitWindow(screenW, screenH, "hello diego");
+    InitAudioDevice();
+    Sound shootFx = LoadSound("assets/audio/shoot.ogg");
+    Sound enemyDeadFx = LoadSound("assets/audio/enemy_dead.ogg");
 
     // FIXME rename it to player
     Vector2 ballPosition = {(float)screenW / 2, (float)screenH / 2};
-
+    bool playerActive = true;
+    
     Vector2 enemyPosition =
         getRandomPositionWithNoCollision(screenW, screenH, ballPosition);
     bool enemyActive = true;
+    bool gameOver = false;
+
+    // debug purposes
+    int c = 0;
 
     SetTargetFPS(60);
 
@@ -110,53 +116,53 @@ int main(void)
         if (IsKeyDown(KEY_S))
             positionStepAndNormalize(1, stepFactor, &ballPosition.y, screenH);
 
-        if (!bullet.active)
+        if (!bullet.active && !gameOver)
         {
             if (IsKeyPressed(KEY_UP))
             {
                 bullet.position.x = ballPosition.x;
-                bullet.position.y = ballPosition.y - (player_radius + 10);
-                directionPointer = &bullet.position.y;
+                bullet.position.y = ballPosition.y - (PLAYER_RADIUS + 10);
+                positionDirectionToModifyAsPointer = &bullet.position.y;
                 direction = UP;
                 bullet.active = true;
             }
 
             if (IsKeyPressed(KEY_RIGHT))
             {
-                bullet.position.x = ballPosition.x + (player_radius + 10);
+                bullet.position.x = ballPosition.x + (PLAYER_RADIUS + 10);
                 bullet.position.y = ballPosition.y;
-                directionPointer = &bullet.position.x;
+                positionDirectionToModifyAsPointer = &bullet.position.x;
                 direction = RIGHT;
                 bullet.active = true;
             }
 
             if (IsKeyPressed(KEY_LEFT))
             {
-                bullet.position.x = ballPosition.x - (player_radius + 10);
+                bullet.position.x = ballPosition.x - (PLAYER_RADIUS + 10);
                 bullet.position.y = ballPosition.y;
-                directionPointer = &bullet.position.x;
+                positionDirectionToModifyAsPointer = &bullet.position.x;
                 direction = LEFT;
                 bullet.active = true;
             }
             if (IsKeyPressed(KEY_DOWN))
             {
+
                 bullet.position.x = ballPosition.x;
-                bullet.position.y = ballPosition.y + (player_radius + 10);
-                directionPointer = &bullet.position.y;
+                bullet.position.y = ballPosition.y + (PLAYER_RADIUS + 10);
+                positionDirectionToModifyAsPointer = &bullet.position.y;
                 direction = DOWN;
                 bullet.active = true;
             }
-        }
-        // if (IsKeyPressed(KEY_SPACE) && !bullet.active)
-        // {
-        //     bullet.position.x = ballPosition.x;
-        //     bullet.position.y = ballPosition.y - (player_radius + 10);
-        //     bullet.active = true;
-        // }
 
-        if (bullet.active && directionPointer)
+            // if an action triggers a bullet
+            // i will play the sound
+            if (bullet.active)
+                PlaySound(shootFx);
+        }
+
+        if (bullet.active && positionDirectionToModifyAsPointer)
         {
-            *directionPointer += bulletSpeed * direction;
+            *positionDirectionToModifyAsPointer += bulletSpeed * direction;
 
             if ((bullet.position.y < 0) || (bullet.position.y > screenH) ||
                 (bullet.position.x < 0) || (bullet.position.x > screenW))
@@ -179,8 +185,31 @@ int main(void)
         // DrawText(xBuffer, 10, 60, 40, RAYWHITE);
         // DrawText(yBuffer, 210, 60, 40, RAYWHITE);
 
-        DrawCircleV(ballPosition, player_radius, GREEN);
+        // draw main player
+        if (playerActive) DrawCircleV(ballPosition, PLAYER_RADIUS, GREEN);
 
+        // DrawRectangle(ballPosition.x-((PLAYER_RADIUS*sqrt(2))/2),
+        // ballPosition.y-((PLAYER_RADIUS*sqrt(2))/2), PLAYER_RADIUS*sqrt(2),
+        // PLAYER_RADIUS*sqrt(2), YELLOW);
+
+        // there will be a little bit of a threshold for the player hitbox, for
+        // now
+        if (enemyActive &&
+            CheckCollisionCircleRec(
+                ballPosition, PLAYER_RADIUS,
+                (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40}))
+        {
+            gameOver = true;
+        }
+
+        if (gameOver)
+        {
+            ClearBackground(RAYWHITE);
+            playerActive = false;
+            enemyActive = false;
+            bullet.active = false; 
+            DrawText("Game Over, press q to quit", screenW/2, screenH/2, 50, BLACK);
+        }
         if (enemyActive &&
             CheckCollisionRecs(
                 (Rectangle){enemyPosition.x, enemyPosition.y, 40, 40},
@@ -188,6 +217,7 @@ int main(void)
         {
             bullet.active = false;
             enemyActive = false;
+            PlaySound(enemyDeadFx);
             score++;
             enemyPosition = getRandomPositionWithNoCollision(screenW, screenH,
                                                              ballPosition);
@@ -196,6 +226,9 @@ int main(void)
         EndDrawing();
     }
 
+    UnloadSound(shootFx);
+    UnloadSound(enemyDeadFx);
+    CloseAudioDevice();
     CloseWindow();
 
     return 0;
