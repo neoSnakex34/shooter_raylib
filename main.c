@@ -80,8 +80,9 @@ int main(void)
     InitAudioDevice();
     Sound shootFx = LoadSound("assets/fx/shoot.ogg");
     Sound enemyDeadFx = LoadSound("assets/fx/enemy_dead.ogg");
-
-
+    Music theme = LoadMusicStream("assets/music/main_track.ogg");
+    SetMusicVolume(theme, 0.4);
+    PlayMusicStream(theme);
     InitWindow(screenW, screenH, "Shoot!");
 
     // FIXME rename it to player
@@ -100,6 +101,7 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+        UpdateMusicStream(theme);
         dt = GetFrameTime();
         float stepFactor = speed * dt;
         BeginDrawing();
@@ -207,6 +209,7 @@ int main(void)
         if (gameOver)
         {
             ClearBackground(RAYWHITE);
+            StopMusicStream(theme);
             playerActive = false;
             enemyActive = false;
             bullet.active = false; 
@@ -228,6 +231,7 @@ int main(void)
         EndDrawing();
     }
 
+    UnloadMusicStream(theme);
     UnloadSound(shootFx);
     UnloadSound(enemyDeadFx);
     CloseAudioDevice();
