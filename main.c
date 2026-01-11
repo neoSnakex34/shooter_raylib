@@ -1,41 +1,39 @@
 #include "raylib-5.5_linux_amd64/include/raylib.h"
+#include "entity.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define ENEMY_TOTAL 10
+#define ENEMY_TOTAL 20
+#define SCREEN_W 1500
+#define SCREEN_H 1500
 #define PLAYER_RADIUS 50
 #define RIGHT 1
 #define LEFT -1
 #define UP -1
 #define DOWN 1
 
-typedef struct Entity
-{
-    Vector2 position;
-    bool active;
-} Entity;
-
 bool atLeastOneEntityIsActive(Entity *e, size_t count)
 {
 
-    bool check = false;
+    // bool check = false;
     for (size_t i = 0; i < count; ++i)
     {
         if (e[i].active == true)
         {
-            check = true;
+            return true; 
         }
     }
 
-    return check;
+    return false;
 }
 
-void floatPosToString(float pos, char posSym, char *buf, size_t bufSize)
-{
-    snprintf(buf, bufSize, "%c: %.2f", posSym, pos);
-}
+// TODO remove 
+// void floatPosToString(float pos, char posSym, char *buf, size_t bufSize)
+// {
+//     snprintf(buf, bufSize, "%c: %.2f", posSym, pos);
+// }
 
 void scoreToString(int score, char *buf, size_t bufSize)
 {
@@ -85,7 +83,7 @@ int main(void)
     int score = 0;
     char scoreBuf[32];
 
-    float speed = 240.0f;
+    float speed = 360.0f;
     float dt = 1;
     float bulletSpeed = 30.0f;
 
@@ -98,10 +96,8 @@ int main(void)
 
     // char xBuffer[32];
     // char yBuffer[32];
-    const int screenW = 1500;
-    const int screenH = 1500;
 
-    Vector2 playerPosition = {(float)screenW / 2, (float)screenH / 2};
+    Vector2 playerPosition = {(float)SCREEN_W / 2, (float)SCREEN_H / 2};
     bool playerActive = true;
 
     /* initialize the enemies */
@@ -110,11 +106,11 @@ int main(void)
         enemies[i].active = true;
         // TODO make them avoid eachother with a pointer to the vector
         enemies[i].position =
-            getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
+            getRandomPositionWithNoCollision(SCREEN_W, SCREEN_H, playerPosition);
     }
 
     //   Vector2 enemyPosition =
-    //       getRandomPositionWithNoCollision(screenW, screenH, playerPosition);
+    //       getRandomPositionWithNoCollision(SCREEN_W, SCREEN_H, playerPosition);
     //   bool enemyActive = true;
     bool gameOver = false;
 
@@ -127,7 +123,7 @@ int main(void)
     Music theme = LoadMusicStream("assets/music/main_track.ogg");
     SetMusicVolume(theme, 0.4);
     PlayMusicStream(theme);
-    InitWindow(screenW, screenH, "Shoot!");
+    InitWindow(SCREEN_W, SCREEN_H, "Shoot!");
     Texture2D playerTexture = LoadTexture("assets/sprites/player.png");
     Texture2D bulletTexture = LoadTexture("assets/sprites/bullet.png");
     Texture2D enemyTexture = LoadTexture("assets/sprites/enemy.png");
@@ -137,10 +133,10 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+        BeginDrawing();
         UpdateMusicStream(theme);
         dt = GetFrameTime();
         float stepFactor = speed * dt;
-        BeginDrawing();
 
         if (IsKeyPressed(KEY_Q))
         {
@@ -148,15 +144,15 @@ int main(void)
         }
 
         if (IsKeyDown(KEY_D))
-            positionStepAndNormalize(1, stepFactor, &playerPosition.x, screenW);
+            positionStepAndNormalize(1, stepFactor, &playerPosition.x, SCREEN_W);
         if (IsKeyDown(KEY_A))
             positionStepAndNormalize(-1, stepFactor, &playerPosition.x,
-                                     screenW);
+                                     SCREEN_W);
         if (IsKeyDown(KEY_W))
             positionStepAndNormalize(-1, stepFactor, &playerPosition.y,
-                                     screenH);
+                                     SCREEN_H);
         if (IsKeyDown(KEY_S))
-            positionStepAndNormalize(1, stepFactor, &playerPosition.y, screenH);
+            positionStepAndNormalize(1, stepFactor, &playerPosition.y, SCREEN_H);
 
         if (!bullet.active && !gameOver)
         {
@@ -206,8 +202,8 @@ int main(void)
         {
             *positionDirectionToModifyAsPointer += bulletSpeed * direction;
 
-            if ((bullet.position.y < 0) || (bullet.position.y > screenH) ||
-                (bullet.position.x < 0) || (bullet.position.x > screenW))
+            if ((bullet.position.y < 0) || (bullet.position.y > SCREEN_H) ||
+                (bullet.position.x < 0) || (bullet.position.x > SCREEN_W))
                 bullet.active = false;
 
             // draw the bullet 
@@ -282,7 +278,7 @@ int main(void)
                     bullet.active = false;
                     score++;
                     enemies[i].position = getRandomPositionWithNoCollision(
-                        screenW, screenH, playerPosition);
+                        SCREEN_W, SCREEN_H, playerPosition);
                     enemies[i].active = true;
                     // update enemies ?
                 }
@@ -297,8 +293,8 @@ int main(void)
         //     enemyActive = false;
         //     PlaySound(enemyDeadFx);
         //     score++;
-        //     enemyPosition = getRandomPositionWithNoCollision(screenW,
-        //     screenH,
+        //     enemyPosition = getRandomPositionWithNoCollision(SCREEN_W,
+        //     SCREEN_H,
         //                                                      playerPosition);
         //     enemyActive = true;
         // }
@@ -314,7 +310,7 @@ int main(void)
             }
             // enemyActive = false;
             bullet.active = false;
-            DrawText("Game Over, press q to quit", screenW / 2, screenH / 2, 50,
+            DrawText("Game Over, press q to quit", SCREEN_W / 2, SCREEN_H / 2, 50,
                      BLACK);
         }
 
