@@ -10,6 +10,8 @@
 #define INT_TO_STRING_BUF_SIZE 32
 #define SCREEN_W 1500
 #define SCREEN_H 1500
+#define CENTER                                                                 \
+    (Vector2) { .x = SCREEN_W / 2.0, .y = SCREEN_H / 2.0 }
 #define ENEMY_COUNT 10
 
 void scoreToString(int score, char *buf, size_t bufSize)
@@ -30,6 +32,9 @@ void init(int *score, bool *gameOver, float *dt, Entity *enemies,
     *score = 0;
     *gameOver = false;
     *dt = 1;
+    player->entity.position = CENTER;
+    player->speed = 360.0f;
+    player->entity.active = true;
 
     for (size_t i = 0; i < ENEMY_COUNT; ++i)
     {
@@ -50,17 +55,14 @@ int main(void)
     int score;
     bool gameOver;
     float dt;
-
     Bullet bullet = {.entity.active = false, .entity.speed = BULLET_SPEED};
     Entity enemies[ENEMY_COUNT];
-
-    Player player = {.entity.position.x = SCREEN_W / 2.0,
-                     .entity.position.y = SCREEN_H / 2.0,
-                     .speed = 360.0f,
-                     .entity.active = true};
+    int time = 0;
+    Player player = {0};
     init(&score, &gameOver, &dt, enemies, &player);
     char scoreBuf[INT_TO_STRING_BUF_SIZE];
 
+    // TODO CHANGE
     InitAudioDevice();
     Sound shootFx = LoadSound("assets/fx/shoot.ogg");
     Sound enemyDeadFx = LoadSound("assets/fx/enemy_dead.ogg");
@@ -69,6 +71,7 @@ int main(void)
     PlayMusicStream(theme);
 
     InitWindow(SCREEN_W, SCREEN_H, "SHOOT!");
+    player.entity.texture = LoadTexture("assets/sprites/player_b.png");
 
     // TODO move this
     int dirX = 0;
@@ -78,9 +81,9 @@ int main(void)
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
-
+        time = (time + 1) % 60;
         BeginDrawing();
-
+        printf("time: %d\n", time);
         scoreToString(score, scoreBuf, INT_TO_STRING_BUF_SIZE);
         DrawText(scoreBuf, 20, 20, 60, RAYWHITE);
         UpdateMusicStream(theme);
@@ -136,7 +139,22 @@ int main(void)
         updatePlayerPosition(&player, &dt, &dirX, &dirY, SCREEN_W, SCREEN_H);
         if (player.entity.active)
         {
-            DrawCircleV(player.entity.position, 50, GREEN);
+            // DrawRectangle(player.entity.position.x,
+            // player.entity.position.y-33, 33, 99, GREEN);
+            // DrawRectangle(player.entity.position.x-33,
+            // player.entity.position.y, 99, 33, GREEN);
+            // DrawRectangle(player.entity.position.x-8.65,
+            // player.entity.position.y-8.65, 49, 49, GREEN);
+            DrawTexture(player.entity.texture,
+                        player.entity.position.x - PLAYER_RADIUS,
+                        player.entity.position.y - PLAYER_RADIUS, WHITE);
+            if (time > 30)
+            {
+                DrawCircleV(player.entity.position, PLAYER_RADIUS, DARKGREEN);
+                DrawTexture(player.entity.texture,
+                            player.entity.position.x - PLAYER_RADIUS,
+                            player.entity.position.y - PLAYER_RADIUS, WHITE);
+            }
         }
 
         if (!bullet.entity.active && !gameOver)
@@ -174,7 +192,6 @@ int main(void)
         */
         if (bullet.entity.active)
         {
-            // TODO here play the sound?
             updateBullet(&bullet, SCREEN_W, SCREEN_H);
             DrawRectangle(bullet.entity.position.x - BULLET_TYPE_ONE_SIZE / 2.0,
                           bullet.entity.position.y - BULLET_TYPE_ONE_SIZE / 2.0,
@@ -216,6 +233,7 @@ int main(void)
                             BULLET_TYPE_ONE_SIZE, BULLET_TYPE_ONE_SIZE}))
                 {
                     printf("shoot!\n");
+                    PlaySound(enemyDeadFx);
                     // printf("active: %d\n",getActiveEntity(enemies,
                     // ENEMY_COUNT));
                     bullet.entity.active = false;
@@ -241,13 +259,19 @@ int main(void)
 
             bullet.entity.active = false;
 
-            char *gameOverText = "Game Over\npress esc to exit";
+            char *gameOverText =
+                "Game Over\npress esc to exit\ntype r to restart";
             int textWidth = MeasureText(gameOverText, 50);
 
             int textStartX = (SCREEN_W / 2) - textWidth / 2;
             int textStartY = (SCREEN_H / 2) - 50 / 2;
 
             DrawText(gameOverText, textStartX, textStartY, 50, BLACK);
+            if (IsKeyPressed(KEY_R))
+            {
+                init(&score, &gameOver, &dt, enemies, &player);
+                PlayMusicStream(theme);
+            }
         }
 
         EndDrawing();

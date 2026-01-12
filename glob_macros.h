@@ -3,7 +3,7 @@
 
 #define POSITIVE 1
 #define NEGATIVE -1
-#define PLAYER_RADIUS 50
+#define PLAYER_RADIUS 48
 #define BULLET_SPEED 30
 #define ENEMY_TYPE_ONE_SIZE 40
 #define BULLET_TYPE_ONE_SIZE 30
