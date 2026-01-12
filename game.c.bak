@@ -34,7 +34,7 @@ void init(int *score, bool *gameOver, float *dt, Entity *enemies,
     for (size_t i = 0; i < ENEMY_COUNT; ++i)
     {
         enemies[i].position = getRandomPositionAvoidingCircle(
-            SCREEN_W, SCREEN_H, &player->entity, PLAYER_RADIUS + 100);
+            SCREEN_W, SCREEN_H, &player->entity, PLAYER_RADIUS+100);
         enemies[i].active = true;
     }
 };
@@ -81,7 +81,7 @@ int main(void)
 
         BeginDrawing();
 
-        scoreToString(score, scoreBuf, INT_TO_STRING_BUF_SIZE);
+scoreToString(score, scoreBuf, INT_TO_STRING_BUF_SIZE);
         DrawText(scoreBuf, 20, 20, 60, RAYWHITE);
         UpdateMusicStream(theme);
         dt = GetFrameTime();
@@ -216,14 +216,12 @@ int main(void)
                             BULLET_TYPE_ONE_SIZE, BULLET_TYPE_ONE_SIZE}))
                 {
                     printf("shoot!\n");
-                    // printf("active: %d\n",getActiveEntity(enemies,
-                    // ENEMY_COUNT));
+                    // printf("active: %d\n",getActiveEntity(enemies, ENEMY_COUNT));
                     bullet.entity.active = false;
                     enemy->active = false;
                     score++;
                     enemy->position = getRandomPositionAvoidingCircle(
-                        SCREEN_W, SCREEN_H, &player.entity,
-                        PLAYER_RADIUS + 100);
+                        SCREEN_W, SCREEN_H, &player.entity, PLAYER_RADIUS+100);
                     enemy->active = true;
                 }
             }

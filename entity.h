@@ -12,6 +12,7 @@ typedef struct Entity {
 } Entity;
 
 bool atLeastOneIsActive(Entity *e, size_t size);
+int getActiveEntity(Entity *e, size_t size);
 Vector2 getRandomPositionAvoidingCircle(int maxW, int maxH, Entity* target, int radius);
 
 

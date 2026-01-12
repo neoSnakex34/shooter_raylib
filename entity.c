@@ -39,3 +39,12 @@ Vector2 getRandomPositionAvoidingCircle(int maxW, int maxH, Entity *target,
     return newPosition;
 }
 
+int getActiveEntity(Entity *e, size_t size)
+{
+    int c = 0;
+    for (size_t i = 0; i < size; ++i)
+        if (e[i].active)
+            c++;
+
+    return c;
+}
