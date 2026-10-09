@@ -1,7 +1,7 @@
 main
 game
 raylib/
-game.html
-game.js
-game.wasm
-game.data
+/game.html
+/game.js
+/game.wasm
+/game.data
