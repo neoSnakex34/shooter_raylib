@@ -12,8 +12,13 @@
 #endif
 
 #define INT_TO_STRING_BUF_SIZE 32
+#ifdef PLATFORM_WEB
+#define SCREEN_W 1280
+#define SCREEN_H 720
+#else
 #define SCREEN_W 1500
 #define SCREEN_H 1500
+#endif
 #define CENTER                                                                 \
     (Vector2) { .x = SCREEN_W / 2.0, .y = SCREEN_H / 2.0 }
 #define ENEMY_COUNT 10
