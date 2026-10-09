@@ -25,7 +25,8 @@ WEB_CC = emcc
 WEB_CFLAGS = -Wall -Wextra -O2 -DPLATFORM_WEB \
 	-I $(RAYLIB_WEB_PATH)/src
 WEB_LDFLAGS = -L $(RAYLIB_WEB_PATH)/build_web -lraylib \
-	-s USE_GL=1 -s ASYNCIFY=1 \
+	-s USE_GLFW=3 -s FORCE_FILESYSTEM=1 -s ASYNCIFY \
+	-s TOTAL_MEMORY=134217728 \
 	--preload-file assets
 
 web: $(WEB_TARGET)
