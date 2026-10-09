@@ -24,7 +24,7 @@ WEB_TARGET = game.html
 WEB_CC = emcc
 WEB_CFLAGS = -Wall -Wextra -O2 -DPLATFORM_WEB \
 	-I $(RAYLIB_WEB_PATH)/src
-WEB_LDFLAGS = -L $(RAYLIB_WEB_PATH)/build_web -lraylib \
+WEB_LDFLAGS = -L $(RAYLIB_WEB_PATH)/build_web/raylib -lraylib \
 	-s USE_GLFW=3 -s FORCE_FILESYSTEM=1 -s ASYNCIFY \
 	-s TOTAL_MEMORY=134217728 \
 	--preload-file assets
